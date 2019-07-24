@@ -1,5 +1,5 @@
 """
-    shake() -> List of unused dependencies
+    shake(package) -> List of unused dependencies
 
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
