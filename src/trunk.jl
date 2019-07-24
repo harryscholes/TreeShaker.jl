@@ -3,33 +3,55 @@
 
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
-function shake(package; verbose = false)
+function shake(package::String; verbose = false)
     # raw snooping 
     name = randstring(12)
 
-    call = """
-    SnoopCompile.@snoopc "/tmp/$name.log" begin
-        using Pkg, $package
-        isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) ? include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) : nothing
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl")) end    
+    call_build = """
+    SnoopCompile.@snoopc "/tmp/$(name)_test.log" begin
+        using Pkg
+        Pkg.add("$(dirname(dirname(pathof(Module(Symbol(package))))))")
+        cd(dirname(dirname(pathof($package))))
+        Pkg.instantiate
+        include("deps", "build.jl")
+    end
+    """
+    call_test = """
+    SnoopCompile.@snoopc "/tmp/$(name)_build.log" begin
+        using $package, Pkg
+        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+    end
     """
 
-    @info "Snooping `] build` and `] test` for $package..."
+    @info "Snooping on `] build $package`..."
     
     if verbose 
-        eval(Meta.parse(call));
+        eval(Meta.parse(call_build));
     else 
-        @suppress eval(Meta.parse(call));
+        @suppress eval(Meta.parse(call_build));
+    end
+    
+    @info "Snooping on `] test $package`..."
+    
+    if verbose 
+        eval(Meta.parse(call_test));
+    else 
+        @suppress eval(Meta.parse(call_test));
     end
 
     # process snooping 
-    data = SnoopCompile.read("/tmp/$name.log");
-    pc = SnoopCompile.parcel(reverse!(data[2]));
-    rm("/tmp/$name.log")
+    data_build = SnoopCompile.read("/tmp/$(name)_build.log");
+    rm("/tmp/$(name)_build.log")
+    data_test = SnoopCompile.read("/tmp/$(name)_test.log");
+    rm("/tmp/$(name)_test.log")
+    
+    pc_build = SnoopCompile.parcel(reverse!(data_build[2]));
+    pc_test = SnoopCompile.parcel(reverse!(data_test[2]));
 
     # construct deps sets
     @info "Diffing dependencies..."
-    used = [String(key) for key in keys(pc)]; 
+    @show vcat(keys(pc_build),keys(pc_test))
+    used = [String(key) for key in vcat(keys(pc_build),keys(pc_test))]; 
     ctx = Pkg.Types.Context()
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
     listed = keys(pkg_ctx.deps)
