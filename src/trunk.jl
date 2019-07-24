@@ -9,51 +9,37 @@ function shake(package::Module; verbose = false)
     
     modroot = dirname(dirname(pathof(package)))
     
-    call_build = """
-    SnoopCompile.@snoopc """/tmp/$(name)_test.log""" begin
-        using Pkg
-        Pkg.dev($modroot)
-        cd($modroot)
-        Pkg.instantiate()
-        include(joinpath("deps", "build.jl"))
-    end
-    """
-    call_test = """
-    SnoopCompile.@snoopc "/tmp/$(name)_build.log" begin
-        using $string(package), Pkg
-        include(joinpath($modroot, "test", "runtests.jl"))
-    end
-    """
 
-    @info "Snooping on `] build $(string(package))`..."
+   call = """
+            SnoopCompile.@snoopc "/tmp/$(name)_test.log" begin
+                using Pkg
+                Pkg.activate("$modroot")
+                Pkg.instantiate()
+                Pkg.build()
     
+                isfile(joinpath("$modroot","deps", "build.jl")) && include(joinpath("deps", "build.jl"))     
+                
+                include(joinpath("$modroot","test", "runtests.jl"))
+            end
+        """
+    
+    @info "Snooping on build and tests for $(string(package))..."
     if verbose 
-        eval(Meta.parse(call_build));
+        eval(Meta.parse(call));
     else 
-        @suppress eval(Meta.parse(call_build));
+        @suppress eval(Meta.parse(call));
     end
-    
-    @info "Snooping on `] test $(string(package))`..."
-    
-    if verbose 
-        eval(Meta.parse(call_test));
-    else 
-        @suppress eval(Meta.parse(call_test));
-    end
+
 
     # process snooping 
-    data_build = SnoopCompile.read("/tmp/$(name)_build.log");
-    rm("/tmp/$(name)_build.log")
-    data_test = SnoopCompile.read("/tmp/$(name)_test.log");
-    rm("/tmp/$(name)_test.log")
+    data = SnoopCompile.read("""/tmp/$(name).log""");
+    rm("/tmp/TreeShaker.log")
     
-    pc_build = SnoopCompile.parcel(reverse!(data_build[2]));
-    pc_test = SnoopCompile.parcel(reverse!(data_test[2]));
+    pc = SnoopCompile.parcel(reverse!(data[2]));
 
     # construct deps sets
     @info "Diffing dependencies..."
-    @show vcat(keys(pc_build),keys(pc_test))
-    used = [String(key) for key in vcat(keys(pc_build),keys(pc_test))]; 
+    used = [String(key) for key in keys(pc)]; 
     ctx = Pkg.Types.Context()
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
     listed = keys(pkg_ctx.deps)
