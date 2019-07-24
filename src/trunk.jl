@@ -1,9 +1,9 @@
 """
-    shake(package) -> List of unused dependencies
+    shake(package; verbose = false) -> List of unused dependencies
 
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
-function shake(package)
+function shake(package; verbose = false)
     # raw snooping 
     name = randstring(12)
 
@@ -15,7 +15,12 @@ function shake(package)
     """
 
     @info "Snooping `] build` and `] test` for $package..."
-    eval(Meta.parse(call));
+    
+    if verbose 
+        eval(Meta.parse(call));
+    else 
+        @suppress eval(Meta.parse(call));
+    end
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");
