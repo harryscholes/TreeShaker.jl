@@ -10,11 +10,12 @@ function shake(package)
     end    
     """;
     println("Snooping tests/build for $package...")
-    @suppress_out eval(Meta.parse(call));
+    eval(Meta.parse(call));
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");
     pc = SnoopCompile.parcel(reverse!(data[2]));
+    rm("/tmp/$name.log")
 
     # construct deps sets
     println("Diffing dependencies...")
@@ -23,9 +24,11 @@ function shake(package)
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
     listed = keys(pkg_ctx.deps)
 
-    # clean and return 
-    rm("/tmp/$name.log")
+    # filtering step, just to reduce false positives 
     lowHangingFruit = setdiff(listed, used)
+    println("Filtering...")
+    filter!(fruit -> ~any(occursin.(Ref(fruit), data[2])), lowHangingFruit)
+
     println("These project deps are unused in tests:")
     return lowHangingFruit
 end
