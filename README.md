@@ -1,8 +1,11 @@
-# TreeShaker
+# TreeShaker.jl
+Shake packages until unused deps fall off.
 
 [![Build Status](https://travis-ci.com/arnavs/TreeShaker.jl.svg?branch=master)](https://travis-ci.com/arnavs/TreeShaker.jl)
 
-Uses [SnoopCompile](https://github.com/timholy/SnoopCompile.jl) to step through package tests, and then diffs it against things you've used in your `Project.toml` 
+Uses [SnoopCompile](https://github.com/timholy/SnoopCompile.jl) to step through package build & tests, and then diffs it against things you've used in your `Project.toml`.
+
+Relies on good (ideally 100%) test code coverage, but there are likely to be many edge cases, so take the fruit with a pinch of salt.
 
 ## Usage 
 
