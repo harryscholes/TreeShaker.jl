@@ -1,5 +1,11 @@
 module TreeShaker
 
-greet() = print("Hello World!")
+# Deps
+using SnoopCompile, Random, Pkg
+
+# Includes 
+include("meat.jl")
+
+# Exports 
 
 end # module
