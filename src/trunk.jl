@@ -11,8 +11,7 @@ function shake(package)
     SnoopCompile.@snoopc "/tmp/$name.log" begin
         using Pkg, $package
         isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) ? include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) : nothing
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
-	end    
+        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl")) end    
     """
 
     @info "Snooping `] build` and `] test` for $package..."
