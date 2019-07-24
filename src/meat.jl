@@ -8,7 +8,7 @@ function shake(package)
         include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
     end    
     """;
-    eval(Meta.parse(call));
+    @suppress eval(Meta.parse(call));
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");

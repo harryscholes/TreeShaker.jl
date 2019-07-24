@@ -1,7 +1,7 @@
 module TreeShaker
 
 # Deps
-using SnoopCompile, Random, Pkg
+using SnoopCompile, Random, Pkg, Suppressor
 
 # Includes 
 include("meat.jl")
