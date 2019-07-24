@@ -5,11 +5,12 @@ function shake(package)
     call = """
     SnoopCompile.@snoopc "/tmp/$name.log" begin
         using Pkg, $package
+        Pkg.build("$package")
         include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
     end    
     """;
-    println("Snooping tests for $package...")
-    @suppress eval(Meta.parse(call));
+    println("Snooping tests/build for $package...")
+    @suppress_out eval(Meta.parse(call));
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");
