@@ -3,27 +3,30 @@
 
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
-function shake(package::String; verbose = false)
+function shake(package::Module; verbose = false)
     # raw snooping 
     name = randstring(12)
-
+    
+    modroot = dirname(dirname(pathof(package)))
+    @show modroot
+    
     call_build = """
     SnoopCompile.@snoopc "/tmp/$(name)_test.log" begin
         using Pkg
-        Pkg.add("$(dirname(dirname(pathof(Module(Symbol(package))))))")
-        cd(dirname(dirname(pathof($package))))
+        Pkg.dev("$modroot")
+        cd($modroot)
         Pkg.instantiate
         include("deps", "build.jl")
     end
     """
     call_test = """
     SnoopCompile.@snoopc "/tmp/$(name)_build.log" begin
-        using $package, Pkg
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+        using $(string(package)), Pkg
+        include($modroot, "test", "runtests.jl")
     end
     """
 
-    @info "Snooping on `] build $package`..."
+    @info "Snooping on `] build $(string(package))`..."
     
     if verbose 
         eval(Meta.parse(call_build));
@@ -31,7 +34,7 @@ function shake(package::String; verbose = false)
         @suppress eval(Meta.parse(call_build));
     end
     
-    @info "Snooping on `] test $package`..."
+    @info "Snooping on `] test $(string(package))`..."
     
     if verbose 
         eval(Meta.parse(call_test));
