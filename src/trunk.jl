@@ -8,21 +8,20 @@ function shake(package::Module; verbose = false)
     name = randstring(12)
     
     modroot = dirname(dirname(pathof(package)))
-    @show modroot
     
     call_build = """
-    SnoopCompile.@snoopc "/tmp/$(name)_test.log" begin
+    SnoopCompile.@snoopc """/tmp/$(name)_test.log""" begin
         using Pkg
-        Pkg.dev("$modroot")
+        Pkg.dev($modroot)
         cd($modroot)
-        Pkg.instantiate
-        include("deps", "build.jl")
+        Pkg.instantiate()
+        include(joinpath("deps", "build.jl"))
     end
     """
     call_test = """
     SnoopCompile.@snoopc "/tmp/$(name)_build.log" begin
-        using $(string(package)), Pkg
-        include($modroot, "test", "runtests.jl")
+        using $string(package), Pkg
+        include(joinpath($modroot, "test", "runtests.jl"))
     end
     """
 
