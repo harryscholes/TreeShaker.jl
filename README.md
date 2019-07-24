@@ -20,3 +20,5 @@ Diffing dependencies...
 These project deps are unused in tests:
 Set(["Weave", "Flux"])
 ```
+
+Full output during snooping of build and tests can be returned with `shake("Expectations", verbose=true)`.
