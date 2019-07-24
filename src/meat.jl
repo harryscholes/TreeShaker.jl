@@ -1,26 +1,22 @@
 """
-    shake(package, verbose=false) -> List of unused dependencies
+    shake() -> List of unused dependencies
 
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
-function shake(package, verbose=false)
+function shake(package)
     # raw snooping 
     name = randstring(12)
 
     call = """
     SnoopCompile.@snoopc "/tmp/$name.log" begin
         using Pkg, $package
-        Pkg.build("$package")
-        Pkg.test("$package")
-    end    
-    """;
-    @info "Snooping `]build` and `]test` for $package..."
-    
-    if verbose
-        eval(Meta.parse(call));
-    else
-        @suppress eval(Meta.parse(call));
-    end
+        isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) ? include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) : nothing
+        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+	end    
+    """
+
+    @info "Snooping `] build` and `] test` for $package..."
+    eval(Meta.parse(call));
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");
@@ -39,6 +35,6 @@ function shake(package, verbose=false)
     @info "Filtering..."
     filter!(fruit -> ~any(occursin.(Ref(fruit), data[2])), lowHangingFruit)
 
-    @info "These project deps are unused in tests:"
+    @info "These project deps are unused in tests: $lowHangingFruit"
     return lowHangingFruit
 end
