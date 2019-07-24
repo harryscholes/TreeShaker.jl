@@ -4,28 +4,28 @@
 Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
 """
 function shake(package; verbose = false)
-    # raw snooping 
-    name = randstring(12)
+    # raw snooping
+    log_file = tempname()
 
     call = """
-    SnoopCompile.@snoopc "/tmp/$name.log" begin
+    SnoopCompile.@snoopc "$log_file" begin
         using Pkg, $package
         isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) ? include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) : nothing
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl")) end    
+        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl")) end
     """
 
     @info "Snooping `] build` and `] test` for $package..."
-    
-    if verbose 
+
+    if verbose
         eval(Meta.parse(call));
-    else 
+    else
         @suppress eval(Meta.parse(call));
     end
 
-    # process snooping 
-    data = SnoopCompile.read("/tmp/$name.log");
-    pc = SnoopCompile.parcel(reverse!(data[2]));
-    rm("/tmp/$name.log")
+    # process snooping
+    data = SnoopCompile.read(log_file)
+    pc = SnoopCompile.parcel(reverse!(data[2]))
+    rm(log_file)
 
     # construct deps sets
     @info "Diffing dependencies..."
