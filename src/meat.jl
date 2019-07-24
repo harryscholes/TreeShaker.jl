@@ -1,4 +1,9 @@
-function shake(package)
+"""
+    shake(package, verbose=false) -> List of unused dependencies
+
+Uses SnoopCompile to step through package build & tests, and then diffs it against things you've included in your `Project.toml`.
+"""
+function shake(package, verbose=false)
     # raw snooping 
     name = randstring(12)
 
@@ -6,11 +11,16 @@ function shake(package)
     SnoopCompile.@snoopc "/tmp/$name.log" begin
         using Pkg, $package
         Pkg.build("$package")
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+        Pkg.test("$package")
     end    
     """;
-    println("Snooping tests/build for $package...")
-    eval(Meta.parse(call));
+    @info "Snooping `]build` and `]test` for $package..."
+    
+    if verbose
+        eval(Meta.parse(call));
+    else
+        @suppress eval(Meta.parse(call));
+    end
 
     # process snooping 
     data = SnoopCompile.read("/tmp/$name.log");
@@ -18,7 +28,7 @@ function shake(package)
     rm("/tmp/$name.log")
 
     # construct deps sets
-    println("Diffing dependencies...")
+    @info "Diffing dependencies..."
     used = [String(key) for key in keys(pc)]; 
     ctx = Pkg.Types.Context()
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
@@ -26,9 +36,9 @@ function shake(package)
 
     # filtering step, just to reduce false positives 
     lowHangingFruit = setdiff(listed, used)
-    println("Filtering...")
+    @info "Filtering..."
     filter!(fruit -> ~any(occursin.(Ref(fruit), data[2])), lowHangingFruit)
 
-    println("These project deps are unused in tests:")
+    @info "These project deps are unused in tests:"
     return lowHangingFruit
 end
