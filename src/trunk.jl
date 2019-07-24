@@ -7,19 +7,22 @@ function shake(package; verbose = false)
     # raw snooping
     log_file = tempname()
 
-    call = """
-    SnoopCompile.@snoopc "$log_file" begin
-        using Pkg, $package
-        isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) ? include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl")) : nothing
-        include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl")) end
-    """
+    call = quote
+        SnoopCompile.@snoopc $log_file begin
+            using Pkg, $package
+            if isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl"))
+                include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl"))
+            end
+            include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+        end
+    end
 
     @info "Snooping `] build` and `] test` for $package..."
 
     if verbose
-        eval(Meta.parse(call));
+        eval(call)
     else
-        @suppress eval(Meta.parse(call));
+        @suppress eval(call)
     end
 
     # process snooping
