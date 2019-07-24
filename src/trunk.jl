@@ -34,11 +34,11 @@ function shake(package; verbose = false)
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
     listed = keys(pkg_ctx.deps)
 
-    # filtering step, just to reduce false positives 
-    lowHangingFruit = setdiff(listed, used)
+    # filtering step, just to reduce false positives
+    low_hanging_fruit = setdiff(listed, used)
     @info "Filtering..."
-    filter!(fruit -> ~any(occursin.(Ref(fruit), data[2])), lowHangingFruit)
+    filter!(fruit -> ~any(occursin.(Ref(fruit), data[2])), low_hanging_fruit)
 
-    @info "These project deps are unused in tests: $lowHangingFruit"
-    return lowHangingFruit
+    @info "These project deps are unused in tests: $low_hanging_fruit"
+    return low_hanging_fruit
 end
