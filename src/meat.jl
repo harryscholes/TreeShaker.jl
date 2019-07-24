@@ -8,6 +8,7 @@ function shake(package)
         include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
     end    
     """;
+    println("Snooping tests for $package...")
     @suppress eval(Meta.parse(call));
 
     # process snooping 
@@ -15,6 +16,7 @@ function shake(package)
     pc = SnoopCompile.parcel(reverse!(data[2]));
 
     # construct deps sets
+    println("Diffing dependencies...")
     used = [String(key) for key in keys(pc)]; 
     ctx = Pkg.Types.Context()
     pkg_ctx = ctx.env.manifest[ctx.env.project.deps[package]]
