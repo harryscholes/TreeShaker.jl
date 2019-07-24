@@ -10,10 +10,12 @@ function shake(package; verbose = false)
     call = quote
         SnoopCompile.@snoopc $log_file begin
             using Pkg, $package
-            if isfile(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl"))
-                include(joinpath(dirname(dirname(pathof($package))), "build", "deps.jl"))
+            package_dir = dirname(dirname(pathof($package)))
+            deps = joinpath(package_dir, "build", "deps.jl")
+            if isfile(deps)
+                include(deps)
             end
-            include(joinpath(dirname(dirname(pathof($package))), "test", "runtests.jl"))
+            include(joinpath(package_dir, "test", "runtests.jl"))
         end
     end
 
