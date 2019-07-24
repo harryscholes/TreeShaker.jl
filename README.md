@@ -11,13 +11,14 @@ Relies on good (ideally 100%) test code coverage, but there are likely to be man
 
 I added a few spurious packages to my local copy of `Expectations.jl`, and then ran: 
 
-```julia 
+```
 julia> using TreeShaker
 
 julia> shake("Expectations")
-Snooping tests for Expectations...
-Diffing dependencies...
-These project deps are unused in tests:
+[ Info: Snooping `]build` and `]test` for Expectations...
+[ Info: Diffing dependencies...
+[ Info: Filtering...
+[ Info: These project deps are unused in tests:
 Set(["Weave", "Flux"])
 ```
 
