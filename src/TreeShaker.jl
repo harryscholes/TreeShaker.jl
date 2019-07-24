@@ -7,7 +7,7 @@ using Pkg # context/manifest info
 using Suppressor # for optionally suppressing build & test output
 
 # Includes 
-include("meat.jl")
+include("trunk.jl")
 
 # Exports 
 export shake
