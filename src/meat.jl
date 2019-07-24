@@ -23,5 +23,6 @@ function shake(package)
     # clean and return 
     rm("/tmp/$name.log")
     lowHangingFruit = setdiff(listed, used)
+    println("These dependencies are unused:")
     return lowHangingFruit
 end

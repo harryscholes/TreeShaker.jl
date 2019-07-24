@@ -7,5 +7,6 @@ using SnoopCompile, Random, Pkg
 include("meat.jl")
 
 # Exports 
+export shake
 
 end # module
